@@ -36,6 +36,46 @@ const userSchema = new Schema({
         type: String,
         required: [true, "Password is required!"]
     },
+    role: {
+        type: String,
+        enum: ["student", "instructor", "admin"],
+        default: "student",
+        index: true
+    },
+    headline: {
+        type: String,
+        default: "",
+        trim: true
+    },
+    bio: {
+        type: String,
+        default: "",
+        trim: true
+    },
+    socialLinks: {
+        github: {
+            type: String,
+            default: ""
+        },
+        linkedin: {
+            type: String,
+            default: ""
+        },
+        twitter: {
+            type: String,
+            default: ""
+        },
+        website: {
+            type: String,
+            default: ""
+        }
+    },
+    enrolledCourses: [
+        {
+            type: Schema.Types.ObjectId,
+            ref: "Course"
+        }
+    ],
     watchHistory: [
         {
             type: Schema.Types.ObjectId,
@@ -51,18 +91,17 @@ const userSchema = new Schema({
     timestamps: true
 })
 
-userSchema.pre("save", async function(next) {
-    if(!this.isModified("password")) return next();
+userSchema.pre("save", async function() {
+    if(!this.isModified("password")) return;
 
     this.password = await bcrypt.hash(this.password, 10)
-    next()
 })
 
-userSchema.method.isPasswordCorrect = async function(password) {
+userSchema.methods.isPasswordCorrect = async function(password) {
     return await bcrypt.compare(password, this.password)
 }
 
-//token generation and refresh token part need to be done
+//token generation and refresh token part
 
 userSchema.methods.generateAccessToken = function(){
     return jwt.sign(
@@ -70,7 +109,8 @@ userSchema.methods.generateAccessToken = function(){
             _id: this._id,
             email: this.email,
             username: this.username,
-            fullName: this.fullName
+            fullName: this.fullName,
+            role: this.role
         }, 
         process.env.ACCESS_TOKEN_SECRET,
         {

@@ -1,11 +1,14 @@
 {
-  "name": "yubu",
+  "name": "yubu-backend",
   "version": "1.0.0",
-  "description": "",
+  "description": "Backend API for YuBu developer learning platform",
   "type": "module",
   "keywords": [
     "javascript",
-    "backend"
+    "backend",
+    "mern",
+    "express",
+    "mongodb"
   ],
   "homepage": "https://github.com/dardmaansingh/YuBu#readme",
   "bugs": {
@@ -17,8 +20,9 @@
   },
   "license": "ISC",
   "author": "Dardmaan Singh",
-  "main": "index.js",
+  "main": "src/index.js",
   "scripts": {
+    "start": "node -r dotenv/config --experimental-json-modules src/index.js",
     "dev": "nodemon -r dotenv/config --experimental-json-modules src/index.js"
   },
   "devDependencies": {
