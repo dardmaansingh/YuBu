@@ -1,133 +1,89 @@
-import mongoose, {Schema} from "mongoose";
-import jwt from "jsonwebtoken"
-import bcrypt from "bcrypt"
+import mongoose, { Schema } from "mongoose";
+import jwt from "jsonwebtoken";
+import bcrypt from "bcrypt";
 
-
-const userSchema = new Schema({
-    username: {
-        type: String,
-        required : true,
-        unique: true,
-        lowercase: true,
-        trim: true,
-        index: true
-    },
-    email: {
-        type: String,
-        required : true,
-        unique: true,
-        lowercase: true,
-        trim: true
-    },
-    fullName: {
-        type: String,
-        required : true,
-        trim: true,
-        index: true
-    },
-    avatar: {
-        type: String, // cloudinary url 
-        required : true
-    },
-    coverImage: {
-        type: String // cloudinary url for this one too
-    },
-    password: {
-        type: String,
-        required: [true, "Password is required!"]
-    },
-    role: {
-        type: String,
-        enum: ["student", "instructor", "admin"],
-        default: "student",
-        index: true
-    },
-    headline: {
-        type: String,
-        default: "",
-        trim: true
-    },
-    bio: {
-        type: String,
-        default: "",
-        trim: true
-    },
-    socialLinks: {
-        github: {
+const userSchema = new Schema(
+    {
+        username: {
+            type: String,
+            required: [true, "Username is required"],
+            unique: true,
+            lowercase: true,
+            trim: true,
+            index: true
+        },
+        email: {
+            type: String,
+            required: [true, "Email is required"],
+            unique: true,
+            lowercase: true,
+            trim: true
+        },
+        fullName: {
+            type: String,
+            required: [true, "Full name is required"],
+            trim: true
+        },
+        avatar: {
             type: String,
             default: ""
         },
-        linkedin: {
+        password: {
             type: String,
-            default: ""
+            required: [true, "Password is required"]
         },
-        twitter: {
+        role: {
             type: String,
-            default: ""
+            enum: ["user", "admin"],
+            default: "user"
         },
-        website: {
-            type: String,
-            default: ""
+        reputation: {
+            type: Number,
+            default: 0
+        },
+        refreshToken: {
+            type: String
         }
     },
-    enrolledCourses: [
-        {
-            type: Schema.Types.ObjectId,
-            ref: "Course"
-        }
-    ],
-    watchHistory: [
-        {
-            type: Schema.Types.ObjectId,
-            ref: "Video"
-        }
-    ],
-    refreshToken: {
-        type: String
+    {
+        timestamps: true
     }
+);
 
-},
-{
-    timestamps: true
-})
+userSchema.pre("save", async function () {
+    if (!this.isModified("password")) return;
+    this.password = await bcrypt.hash(this.password, 10);
+});
 
-userSchema.pre("save", async function() {
-    if(!this.isModified("password")) return;
+userSchema.methods.isPasswordCorrect = async function (password) {
+    return await bcrypt.compare(password, this.password);
+};
 
-    this.password = await bcrypt.hash(this.password, 10)
-})
-
-userSchema.methods.isPasswordCorrect = async function(password) {
-    return await bcrypt.compare(password, this.password)
-}
-
-//token generation and refresh token part
-
-userSchema.methods.generateAccessToken = function(){
+userSchema.methods.generateAccessToken = function () {
     return jwt.sign(
-        { //payload
+        {
             _id: this._id,
             email: this.email,
             username: this.username,
-            fullName: this.fullName,
             role: this.role
-        }, 
+        },
         process.env.ACCESS_TOKEN_SECRET,
         {
-            expiresIn: process.env.ACCESS_TOKEN_EXPIRY
+            expiresIn: process.env.ACCESS_TOKEN_EXPIRY || "1d"
         }
-    )
-}
-userSchema.methods.generateRefreshToken = function() {
+    );
+};
+
+userSchema.methods.generateRefreshToken = function () {
     return jwt.sign(
-        { //payload
+        {
             _id: this._id
-        }, 
+        },
         process.env.REFRESH_TOKEN_SECRET,
         {
-            expiresIn: process.env.REFRESH_TOKEN_EXPIRY
+            expiresIn: process.env.REFRESH_TOKEN_EXPIRY || "10d"
         }
-    )
-}
+    );
+};
 
-export const User = mongoose.model("User", userSchema)
+export const User = mongoose.model("User", userSchema);
