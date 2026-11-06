@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import os from "os";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
@@ -19,7 +20,7 @@ const uploadResume = asyncHandler(async (req, res) => {
         throw new ApiError(400, "PDF file is required");
     }
 
-    const resumeDir = "./public/resumes";
+    const resumeDir = path.join(os.tmpdir(), "resumes");
     if (!fs.existsSync(resumeDir)) {
         fs.mkdirSync(resumeDir, { recursive: true });
     }
