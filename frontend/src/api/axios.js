@@ -10,6 +10,14 @@ const api = axios.create({
   withCredentials: true,
 });
 
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem("accessToken");
+  if (token) {
+    config.headers["Authorization"] = `Bearer ${token}`;
+  }
+  return config;
+});
+
 let isRefreshing = false;
 let failedQueue = [];
 
@@ -50,16 +58,23 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        await axios.post(
+        const refreshRes = await axios.post(
           `${baseURL}/users/refresh-token`,
           {},
           { withCredentials: true }
         );
 
+        const newToken = refreshRes.data?.data?.accessToken;
+        if (newToken) {
+          localStorage.setItem("accessToken", newToken);
+          originalRequest.headers["Authorization"] = `Bearer ${newToken}`;
+        }
+
         processQueue(null);
         return api(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError, null);
+        localStorage.removeItem("accessToken");
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;

@@ -5,10 +5,12 @@ import { User } from "../models/user.js";
 import { uploadCloudinary } from "../utils/cloudinary.js";
 import jwt from "jsonwebtoken";
 
+const isProduction = process.env.NODE_ENV === "production";
+
 const cookieOptions = {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax"
+    secure: isProduction,
+    sameSite: isProduction ? "none" : "lax"
 };
 
 const generateAccessAndRefreshTokens = async (userId) => {

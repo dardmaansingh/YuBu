@@ -24,7 +24,11 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (credentials) => {
     const response = await api.post("/users/login", credentials);
-    setUser(response.data.data.user);
+    const { user: loggedInUser, accessToken } = response.data.data;
+    setUser(loggedInUser);
+    if (accessToken) {
+      localStorage.setItem("accessToken", accessToken);
+    }
     return response.data;
   };
 
@@ -40,6 +44,7 @@ export const AuthProvider = ({ children }) => {
       await api.post("/users/logout");
     } finally {
       setUser(null);
+      localStorage.removeItem("accessToken");
     }
   };
 
