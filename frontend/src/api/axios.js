@@ -1,7 +1,12 @@
 import axios from "axios";
 
+const rawBase = import.meta.env.VITE_API_URL;
+const baseURL = rawBase
+  ? `${rawBase.replace(/\/$/, "")}/api/v1`
+  : "/api/v1";
+
 const api = axios.create({
-  baseURL: "/api/v1",
+  baseURL,
   withCredentials: true,
 });
 
@@ -46,7 +51,7 @@ api.interceptors.response.use(
 
       try {
         await axios.post(
-          "/api/v1/users/refresh-token",
+          `${baseURL}/users/refresh-token`,
           {},
           { withCredentials: true }
         );
