@@ -1,9 +1,10 @@
 import connectDB from "../src/db/index.js";
 import { app } from "../src/app.js";
 
-export default async function handler(req, res) {
+app.use(async (req, res, next) => {
   try {
     await connectDB();
+    next();
   } catch (error) {
     return res.status(500).json({
       statusCode: 500,
@@ -12,6 +13,15 @@ export default async function handler(req, res) {
       success: false,
     });
   }
-  return app(req, res);
-}
+});
 
+app.get("/", (req, res) => {
+  res.status(200).json({
+    statusCode: 200,
+    data: null,
+    message: "YuBu Backend API is running successfully",
+    success: true,
+  });
+});
+
+export default app;
